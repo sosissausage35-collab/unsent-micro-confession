@@ -22,6 +22,10 @@ const ENTRY = `${TO_LINE}\n${MESSAGE}\n`;
 
 // Gate: the sealed scorer accepts UTF-8 text of 1-260 characters, not only
 // whitespace, and the message line itself is at most 200 characters.
+// The entry must also be exactly two lines — the "To:" line plus one
+// message line — so a newline inside the message would fail here instead
+// of reaching the scorer. Character counts use [...str] so a multi-byte
+// character counts once, matching the scorer's character-based limits.
 const totalChars = [...ENTRY].length;
 const messageChars = [...MESSAGE].length;
 if (totalChars < 1 || totalChars > 260 || ENTRY.trim().length === 0) {
@@ -29,6 +33,10 @@ if (totalChars < 1 || totalChars > 260 || ENTRY.trim().length === 0) {
 }
 if (messageChars > 200) {
   throw new Error(`message line must be at most 200 characters, got ${messageChars}`);
+}
+const entryLines = ENTRY.replace(/\n$/, "").split("\n");
+if (entryLines.length !== 2 || !entryLines[0].startsWith("To: ")) {
+  throw new Error(`entry must be exactly a To: line plus one message line, got ${entryLines.length} lines`);
 }
 
 const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
